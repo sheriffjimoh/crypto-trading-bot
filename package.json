@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vercel/kv": "^0.2.4",
+    "add": "^2.0.6",
     "axios": "^1.6.2",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.460.0",
@@ -18,7 +19,9 @@
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "recharts": "^2.10.1",
+    "shadcn-ui": "^0.9.3",
     "swr": "^2.2.4",
+    "tabs": "^0.2.0",
     "technicalindicators": "^3.1.0"
   },
   "devDependencies": {

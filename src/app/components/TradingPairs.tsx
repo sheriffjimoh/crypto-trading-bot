@@ -1,7 +1,7 @@
 'use client';
 import useSWR from 'swr';
 // useEffect 
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import { formatNumber } from '@/app/lib/util';
 
 
@@ -14,8 +14,18 @@ export default function TrendingPairs() {
   
 
   if (error) return <div>Failed to load trending pairs</div>;
-  if (!data) return <div>Loading...</div>;
+  if (!data && !Array(data) ) return <div>Loading...</div>;
 
+  if (!Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="bg-yellow-50 p-4 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <AlertCircle className="h-5 w-5 text-yellow-500" />
+          <p className="text-yellow-600">No analysis data available</p>
+        </div>
+      </div>
+    );
+  }
   return (
    <div className="bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-bold mb-6 text-gray-800">Top Trending Pairs</h2>
@@ -31,8 +41,8 @@ export default function TrendingPairs() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data?.map((pair: any, index: any) => (
-              <tr key={pair.symbol} className="hover:bg-gray-50">
+            { data && data?.map((pair: any, index: any) => (
+              <tr key={`${pair.symbol}__${index}key`} className="hover:bg-gray-50">
                 <td className="py-4">
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-sm font-semibold text-gray-700">
                     {index + 1}
