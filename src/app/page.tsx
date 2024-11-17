@@ -10,15 +10,17 @@ export default function Home() {
         Crypto Trading Signals Dashboard
       </h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+       <div className="grid grid-cols-1 gap-8">
         <Suspense fallback={<div>Loading trending pairs...</div>}>
           <TrendingPairs />
         </Suspense>
-        
+      </div>
+
+      <div className="mt-8">
         <Suspense fallback={<div>Loading signals...</div>}>
           <SignalsTable />
         </Suspense>
-      </div>
+      </div> 
       
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-4">Recent Analyses</h2>

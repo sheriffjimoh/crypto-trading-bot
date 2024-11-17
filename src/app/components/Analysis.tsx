@@ -1,182 +1,170 @@
 'use client';
-
-import { useState } from 'react';
 import useSWR from 'swr';
 import { format } from 'date-fns';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { AlertTriangle, TrendingUp, TrendingDown, Activity } from 'lucide-react';
-
-interface AnalysisResult {
-  symbol: string;
-  price: number;
-  change24h: number;
-  indicators: {
-    rsi: number;
-    macd: {
-      MACD: number;
-      signal: number;
-      histogram: number;
-    };
-  };
-  signals: string[];
-  confidence: number;
-  timestamp: number;
-}
+import { TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Analysis() {
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
-  const { data: analyses, error, isLoading } = useSWR<AnalysisResult[]>('/api/recent-analyses', fetcher, {
-    refreshInterval: 30000 // Refresh every 30 seconds
+  const { data: analyses, error, isLoading } = useSWR('/api/recent-analyses', fetcher, {
+    refreshInterval: 30000
   });
 
-  // Get historical data for selected symbol
-  const { data: historicalData } = useSWR(
-    selectedSymbol ? `/api/historical/${selectedSymbol}` : null,
-    fetcher
-  );
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 70) return 'text-green-600 bg-green-50';
-    if (confidence >= 50) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
-  };
-
-  const getChangeColor = (change: number) => {
-    return change >= 0 ? 'text-green-600' : 'text-red-600';
-  };
-
   if (error) return (
-    <div className="bg-red-50 rounded-lg p-4">
-      <div className="flex items-center">
-        <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-        <p className="text-red-700">Failed to load analyses</p>
-      </div>
+    <div className="bg-red-50 p-4 rounded-lg">
+      <p className="text-red-600">Failed to load analyses</p>
     </div>
   );
 
-  if (isLoading) return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="animate-pulse space-y-4">
-        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-4 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      {/* Recent Analyses Grid */}
+  if (isLoading) {
+    return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {analyses?.map((analysis) => (
-          <div 
-            key={analysis.symbol}
-            className="bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedSymbol(analysis.symbol)}
-          >
-            <div className="p-4 border-b">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">{analysis.symbol}</h3>
-                <span className={`px-2 py-1 rounded-full text-sm ${getConfidenceColor(analysis.confidence)}`}>
-                  {analysis.confidence}% Confidence
-                </span>
-              </div>
-            </div>
-            
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Price</p>
-                  <p className="font-medium">${analysis.price.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">24h Change</p>
-                  <p className={`font-medium ${getChangeColor(analysis.change24h)}`}>
-                    {analysis.change24h > 0 ? '+' : ''}{analysis.change24h.toFixed(2)}%
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Technical Indicators</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-gray-500">RSI: </span>
-                    <span className={analysis.indicators.rsi > 70 ? 'text-red-600' : 
-                                  analysis.indicators.rsi < 30 ? 'text-green-600' : ''}>
-                      {analysis.indicators.rsi.toFixed(2)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">MACD: </span>
-                    <span className={analysis.indicators.macd.MACD > 0 ? 'text-green-600' : 'text-red-600'}>
-                      {analysis.indicators.macd.MACD.toFixed(4)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Signals</p>
-                <div className="space-y-1">
-                  {analysis.signals.map((signal, index) => (
-                    <div key={index} className="text-sm flex items-center">
-                      {signal.includes('bullish') ? (
-                        <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                      ) : signal.includes('bearish') ? (
-                        <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-                      ) : (
-                        <Activity className="h-4 w-4 text-blue-500 mr-1" />
-                      )}
-                      {signal}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="text-xs text-gray-500">
-                Updated: {format(analysis.timestamp, 'HH:mm:ss')}
-              </div>
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="animate-pulse bg-white rounded-lg shadow p-6">
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
             </div>
           </div>
         ))}
       </div>
+    );
+  }
 
-      {/* Selected Symbol Details */}
-      {selectedSymbol && historicalData && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold mb-4">
-            {selectedSymbol} Price History
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historicalData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tickFormatter={(timestamp) => format(timestamp, 'HH:mm')}
-                />
-                <YAxis />
-                <Tooltip
-                  labelFormatter={(label) => format(label, 'HH:mm:ss')}
-                  formatter={(value: any) => [`$${parseFloat(value).toLocaleString()}`, 'Price']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke="#2563eb"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+
+  if (!Array.isArray(analyses) || analyses.length === 0) {
+    return (
+      <div className="bg-yellow-50 p-4 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <AlertCircle className="h-5 w-5 text-yellow-500" />
+          <p className="text-yellow-600">No analysis data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {analyses?.map((analysis:any) => (
+        <div key={analysis.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+          <div className="p-4 border-b">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg text-gray-700 font-semibold">{analysis.name}</h3>
+                <span className="text-sm text-gray-700">Rank #{analysis.marketCapRank}</span>
+              </div>
+              <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                {analysis.symbol}
+              </span>
+            </div>
+          </div>
+          
+          <div className="p-4 space-y-4">
+            {/* Price and Changes */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <p className="text-sm text-gray-700">Price</p>
+                <p className="font-medium text-gray-500">${analysis.price.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-700">24h</p>
+                <p className={`font-medium ${analysis.change24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analysis.change24h.toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-700">7d</p>
+                <p className={`font-medium ${analysis.change7d >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analysis.change7d.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+
+            {/* Market Analysis */}
+            <div>
+              <p className="text-sm text-gray-700 mb-2">Market Analysis</p>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Market Cap:</span>
+                  <span className="font-medium">{analysis.analysis.marketCap}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Dominance:</span>
+                  <span className="font-medium">{analysis.analysis.dominance}%</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Volume Profile:</span>
+                  <span className={`font-medium ${
+                    analysis.analysis.volumeProfile === 'Very High' ? 'text-green-600' :
+                    analysis.analysis.volumeProfile === 'High' ? 'text-blue-600' :
+                    'text-gray-600'
+                  }`}>
+                    {analysis.analysis.volumeProfile}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Price Targets */}
+            <div>
+              <p className="text-sm text-gray-700 mb-2">Price Targets</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="text-sm">
+                  <span className="text-gray-700">Support: </span>
+                  <span className="font-medium text-gray-500">${analysis.analysis.priceTarget.support}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-700">Resistance: </span>
+                  <span className="font-medium text-gray-500">${analysis.analysis.priceTarget.resistance}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Trends */}
+            <div className='text-gray-500'>
+              <p className="text-sm text-gray-700 mb-2">Market Trends</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center text-sm">
+                  {analysis.trends.shortTerm === 'Bullish' ? (
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                  )}
+                  <span>{analysis.trends.shortTerm}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Activity className="h-4 w-4 text-blue-500 mr-1" />
+                  <span>{analysis.trends.volumeTrend}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Metrics */}
+            <div>
+              <p className="text-sm text-gray-700 mb-2">Key Metrics</p>
+              <div className="space-y-1">
+                <div className="text-sm">
+                  <span className="text-gray-700">Volatility: </span>
+                  <span className={`font-medium ${
+                    analysis.keyMetrics.volatility24h > 5 ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    {analysis.keyMetrics.volatility24h}%
+                  </span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-700">ATH Distance: </span>
+                  <span className="font-medium text-gray-500">{analysis.keyMetrics.athDistance}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-700 text-right">
+              Updated: {format(analysis.timestamp, 'HH:mm:ss')}
+            </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

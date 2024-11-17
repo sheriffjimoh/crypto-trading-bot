@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import TelegramBot from 'node-telegram-bot-api';
-import { kv } from '@vercel/kv';
+// import { kv } from '@vercel/kv';
 import { analyzeSymbol, getTrendingPairs, getTopGainers, getVolumeSurge } from '@/app/lib/analysis';
+import storage from '@/app/lib/storage';
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { webHook: true });
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const args = messageText.split(' ').slice(1);
 
     // Store user interaction for dashboard
-    await kv.lpush(`user:${chatId}:history`, {
+    await storage.lpush(`user:${chatId}:history`, {
       command: messageText,
       timestamp: Date.now()
     });
@@ -74,7 +75,7 @@ Visit our dashboard: ${process.env.VERCEL_URL}`;
           responseText = formatAnalysisResult(analysis);
           
           // Store analysis in KV for dashboard
-          await kv.set(`analysis:${symbol}`, analysis);
+          await storage.set(`analysis:${symbol}`, analysis);
         }
         break;
 
@@ -108,7 +109,7 @@ Visit our dashboard: ${process.env.VERCEL_URL}`;
           responseText = '⚠️ Please provide symbol and price. Example: /alerts BTCUSDT 50000';
         } else {
           const [symbol, price] = args;
-          await kv.set(`alert:${chatId}:${symbol}`, {
+          await storage.set(`alert:${chatId}:${symbol}`, {
             price: parseFloat(price),
             timestamp: Date.now()
           });

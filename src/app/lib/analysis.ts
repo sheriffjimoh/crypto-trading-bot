@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { RSI, MACD } from 'technicalindicators';
 import { kv } from '@vercel/kv';
+import storage from './storage';
 
 interface MACDResult {
   MACD?: number;
@@ -156,7 +157,8 @@ export async function analyzeSymbol(symbol: string): Promise<AnalysisResult> {
       timestamp: Date.now()
     };
 
-    await kv.set(`analysis:${symbol}`, analysisResult);
+    await storage.set(`analysis:${symbol}`, analysisResult);
+
     return analysisResult;
   } catch (error) {
     console.error('Analysis error:', error);
@@ -181,12 +183,12 @@ export async function getTrendingPairs(): Promise<TrendingPair[]> {
     }));
 
     // Store in KV for caching
-    await kv.set('trending_pairs', trendingPairs, { ex: 300 }); // Cache for 5 minutes
+    await storage.set('trending_pairs', trendingPairs);// Cache for 5 minutes
 
     return trendingPairs;
   } catch (error) {
     // Try to get from cache if API fails
-    const cached = await kv.get('trending_pairs');
+    const cached = await storage.get('trending_pairs');
     if (cached) {
       return cached as TrendingPair[];
     }
@@ -218,12 +220,12 @@ export async function getTopGainers(): Promise<GainerLoser[]> {
     }));
 
     // Store in KV for caching
-    await kv.set('top_gainers', gainers, { ex: 300 }); // Cache for 5 minutes
+    await storage.set('top_gainers', gainers); // Cache for 5 minutes
 
     return gainers;
   } catch (error) {
     // Try to get from cache if API fails
-    const cached = await kv.get('top_gainers');
+    const cached = await storage.get('top_gainers');
     if (cached) {
       return cached as GainerLoser[];
     }
@@ -255,12 +257,12 @@ export async function getTopLosers(): Promise<GainerLoser[]> {
     }));
 
     // Store in KV for caching
-    await kv.set('top_losers', losers, { ex: 300 }); // Cache for 5 minutes
+    await storage.set('top_losers', losers); // Cache for 5 minutes
 
     return losers;
   } catch (error) {
     // Try to get from cache if API fails
-    const cached = await kv.get('top_losers');
+    const cached = await storage.get('top_losers');
     if (cached) {
       return cached as GainerLoser[];
     }
@@ -296,12 +298,12 @@ export async function getVolumeSurge(): Promise<GainerLoser[]> {
       .slice(0, 10); // Take top 10
 
     // Store in KV for caching
-    await kv.set('volume_surge', volumeSurge, { ex: 300 }); // Cache for 5 minutes
+    await storage.set('volume_surge', volumeSurge); // Cache for 5 minutes
 
     return volumeSurge;
   } catch (error) {
     // Try to get from cache if API fails
-    const cached = await kv.get('volume_surge');
+    const cached = await storage.get('volume_surge');
     if (cached) {
       return cached as GainerLoser[];
     }
