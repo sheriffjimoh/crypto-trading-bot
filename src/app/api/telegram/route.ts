@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server';
-import TelegramBot from 'node-telegram-bot-api';
-// import { kv } from '@vercel/kv';
 import { analyzeSymbol, getTrendingPairs, getTopGainers, getVolumeSurge } from '@/app/lib/analysis';
 import storage from '@/app/lib/storage';
 
-const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { webHook: true });
+// Helper function to send Telegram messages
+async function sendTelegramMessage(chatId: number, text: string) {
+  const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+  return fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML', // Enables basic formatting
+    }),
+  });
+}
 
 // Helper function to format analysis result to string
 function formatAnalysisResult(analysis: any) {
@@ -74,7 +86,7 @@ Visit our dashboard: ${process.env.VERCEL_URL}`;
           const analysis = await analyzeSymbol(symbol);
           responseText = formatAnalysisResult(analysis);
           
-          // Store analysis in KV for dashboard
+          // Store analysis in storage for dashboard
           await storage.set(`analysis:${symbol}`, analysis);
         }
         break;
@@ -121,8 +133,8 @@ Visit our dashboard: ${process.env.VERCEL_URL}`;
         responseText = 'Unknown command. Type /start to see available commands.';
     }
 
-    // Send response to Telegram
-    await bot.sendMessage(chatId, responseText);
+    // Send response using Telegram HTTP API
+    await sendTelegramMessage(chatId, responseText);
     
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -131,5 +143,4 @@ Visit our dashboard: ${process.env.VERCEL_URL}`;
   }
 }
 
-// Required for Vercel
 export const runtime = 'edge';
